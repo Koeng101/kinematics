@@ -1,6 +1,7 @@
 package kinematics
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -149,9 +150,25 @@ func BenchmarkInverseKinematics(b *testing.B) {
 		_, err := InverseKinematics(desiredEndEffector, AR3DhParameters, thetasInit)
 		if err != nil {
 			b.Errorf("Failed inverse kinematics benchmark with: %s\nSeed:"+
-				" %f-%f-%f-%f-%f-%f", err, randomSeed.J1, randomSeed.J2,
-				randomSeed.J3, randomSeed.J4,
-				randomSeed.J5, randomSeed.J6)
+				" %f-%f-%f-%f-%f-%f", err,
+				randomSeed[0], randomSeed[1], randomSeed[2],
+				randomSeed[3], randomSeed[4], randomSeed[5])
 		}
 	}
+}
+
+func ExampleForwardKinematics() {
+	angles := []float64{10, 1, 1, 0, 0, 0}
+	coordinates := ForwardKinematics(angles, AR3DhParameters)
+
+	fmt.Println(coordinates)
+	// Output: {-101.74590611879692 -65.96805988175777 -322.27756822304093 0.06040824945687102 -0.20421099379003957 0.2771553334491873 0.9369277637862541}
+}
+
+func ExampleInverseKinematics() {
+	coordinates := XyzWxyz{X: -100, Y: 250, Z: 250, Qx: 0.4007833787652043, Qy: -0.021233218878182854, Qz: 0.9086418268616911, Qw: 0.41903052745255764}
+	angles, _ := InverseKinematics(coordinates, AR3DhParameters)
+
+	fmt.Println(angles)
+	// Output: [1.8462740950010432 0.3416721655970939 -2.313720459511564 -1.7765008677785283 2.2218097507147707 1.2318789996199948]
 }

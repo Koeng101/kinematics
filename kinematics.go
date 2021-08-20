@@ -28,24 +28,10 @@ import (
 // DhParameters stand for "Denavit-Hartenberg Parameters". These parameters
 // define a robotic arm for input into forward or reverse kinematics.
 type DhParameters struct {
-	ThetaOffsets [6]float64
-	AlphaValues  [6]float64
-	AValues      [6]float64
-	DValues      [6]float64
-}
-
-// JointAngles represents angles of the joints in radians.
-type JointAngles struct {
-	J1 float64
-	J2 float64
-	J3 float64
-	J4 float64
-	J5 float64
-	J6 float64
-}
-
-func (st *JointAngles) toFloat() []float64 {
-	return []float64{st.J1, st.J2, st.J3, st.J4, st.J5, st.J6}
+	ThetaOffsets []float64
+	AlphaValues  []float64
+	AValues      []float64
+	DValues      []float64
 }
 
 type Quaternion struct {
@@ -71,11 +57,9 @@ type Pose struct {
 
 // ForwardKinematics calculates the end effector Pose coordinates given
 // joint angles and robotic arm parameters.
-func ForwardKinematics(thetas JointAngles, dhParameters DhParameters) Pose {
-	// First, setup variables. We use 4 variables - theta, alpha, a and d to
-	// calculate a matrix which is then multiplied to an accumulator matrix.
-	thetaArray := []float64{thetas.J1, thetas.J2, thetas.J3,
-		thetas.J4, thetas.J5, thetas.J6}
+func ForwardKinematics(thetas []float64, dhParameters DhParameters) XyzWxyz {
+	// First, setup variables. We use 4 variables - theta, alpha, a and d to calculate a matrix
+	// which is then multiplied to an accumulator matrix.
 	var theta float64
 	var alpha float64
 	var a float64
@@ -88,8 +72,8 @@ func ForwardKinematics(thetas JointAngles, dhParameters DhParameters) Pose {
 	})
 	// Iterate through each joint and built a new
 	// matrix, multiplying it against the accumulator.
-	for jointIdx := 0; jointIdx < 6; jointIdx++ {
-		theta = thetaArray[jointIdx]
+	for jointIdx := 0; jointIdx < len(thetas); jointIdx++ {
+		theta = thetas[jointIdx]
 		theta = theta + dhParameters.ThetaOffsets[jointIdx]
 		alpha = dhParameters.AlphaValues[jointIdx]
 		a = dhParameters.AValues[jointIdx]
@@ -137,15 +121,14 @@ func ForwardKinematics(thetas JointAngles, dhParameters DhParameters) Pose {
 // approximately the number of iterations that will take 1 second to compute.
 var MaxInverseKinematicIteration int = 50
 
-// InverseKinematics calculates joint angles to achieve an end effector Pose
-// given the desired Pose coordinates, the robotic DH parameters and a starting
-// set of joint angles
-func InverseKinematics(desiredEndEffector Pose, dhParameters DhParameters,
-	thetasInit JointAngles) (JointAngles, error) {
+// InverseKinematics calculates joint angles to achieve an XyzWxyz end effector
+// position given the desired XyzWxyz coordinates and the robotic arm
+// parameters.
+func InverseKinematics(desiredEndEffector Pose, dhParameters DhParameters) ([]float64, error) {
+	thetasInit := []float64{0, 0, 0, 0, 0, 0}
 	// Initialize an objective function for the optimization problem
 	objectiveFunction := func(s []float64) float64 {
-		jointAnglesTest := JointAngles{s[0], s[1], s[2], s[3], s[4], s[5]}
-		currentEndEffector := ForwardKinematics(jointAnglesTest, dhParameters)
+		currentEndEffector := ForwardKinematics(s, dhParameters)
 
 		// Get XYZ offsets
 		xOffset := desiredEndEffector.Pos.X - currentEndEffector.Pos.X
@@ -176,9 +159,9 @@ func InverseKinematics(desiredEndEffector Pose, dhParameters DhParameters,
 	problem := optimize.Problem{Func: objectiveFunction}
 
 	// Solve
-	result, err := optimize.Minimize(problem, thetasInit.toFloat(), nil, nil)
+	result, err := optimize.Minimize(problem, thetasInit, nil, nil)
 	if err != nil {
-		return JointAngles{}, err
+		return []float64{}, err
 	}
 	f := result.Location.F
 
@@ -191,22 +174,19 @@ func InverseKinematics(desiredEndEffector Pose, dhParameters DhParameters,
 		randTheta := func() float64 {
 			return 2 * math.Pi * rand.Float64()
 		}
-		randomSeed := JointAngles{randTheta(), randTheta(), randTheta(),
-			randTheta(), randTheta(), randTheta()}
+		randomSeed := []float64{randTheta(), randTheta(), randTheta(), randTheta(), randTheta(), randTheta()}
 
 		// Solve
-		result, err := optimize.Minimize(problem, randomSeed.toFloat(), nil, nil)
+		result, err := optimize.Minimize(problem, randomSeed, nil, nil)
 		if err != nil {
-			return JointAngles{}, err
+			return []float64{}, err
 		}
 		f = result.Location.F
 		if i == MaxInverseKinematicIteration {
-			return JointAngles{}, errors.New("desired position out of range" +
-				" of the robotic arm")
+			return []float64{}, errors.New("Desired position out of range of the robotic arm.")
 		}
 	}
-	r := result.Location.X
-	return JointAngles{r[0], r[1], r[2], r[3], r[4], r[5]}, nil
+	return result.Location.X, nil
 }
 
 // matrixToQuaterion converts a rotation matrix to a quaterion. This code has
