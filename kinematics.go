@@ -27,24 +27,10 @@ import (
 // DhParameters stand for "Denavit-Hartenberg Parameters". These parameters
 // define a robotic arm for input into forward or reverse kinematics.
 type DhParameters struct {
-	ThetaOffsets [6]float64
-	AlphaValues  [6]float64
-	AValues      [6]float64
-	DValues      [6]float64
-}
-
-// StepperTheta represents angles of the joint stepper motors.
-type StepperTheta struct {
-	J1 float64
-	J2 float64
-	J3 float64
-	J4 float64
-	J5 float64
-	J6 float64
-}
-
-func (st *StepperTheta) toFloat() []float64 {
-	return []float64{st.J1, st.J2, st.J3, st.J4, st.J5, st.J6}
+	ThetaOffsets []float64
+	AlphaValues  []float64
+	AValues      []float64
+	DValues      []float64
 }
 
 // XyzWxyz represents an Xyz Qw-Qx-Qy-Qz coordinate, where Qw-Qx-Qy-Qz are
@@ -61,10 +47,9 @@ type XyzWxyz struct {
 
 // ForwardKinematics calculates the end effector XyzWxyz coordinates given
 // joint angles and robotic arm parameters.
-func ForwardKinematics(thetas StepperTheta, dhParameters DhParameters) XyzWxyz {
+func ForwardKinematics(thetas []float64, dhParameters DhParameters) XyzWxyz {
 	// First, setup variables. We use 4 variables - theta, alpha, a and d to calculate a matrix
 	// which is then multiplied to an accumulator matrix.
-	thetaArray := []float64{thetas.J1, thetas.J2, thetas.J3, thetas.J4, thetas.J5, thetas.J6}
 	var theta float64
 	var alpha float64
 	var a float64
@@ -77,8 +62,8 @@ func ForwardKinematics(thetas StepperTheta, dhParameters DhParameters) XyzWxyz {
 	})
 	// Iterate through each joint and built a new
 	// matrix, multiplying it against the accumulator.
-	for jointIdx := 0; jointIdx < 6; jointIdx++ {
-		theta = thetaArray[jointIdx]
+	for jointIdx := 0; jointIdx < len(thetas); jointIdx++ {
+		theta = thetas[jointIdx]
 		theta = theta + dhParameters.ThetaOffsets[jointIdx]
 		alpha = dhParameters.AlphaValues[jointIdx]
 		a = dhParameters.AValues[jointIdx]
@@ -128,12 +113,11 @@ var MaxInverseKinematicIteration int = 50
 // InverseKinematics calculates joint angles to achieve an XyzWxyz end effector
 // position given the desired XyzWxyz coordinates and the robotic arm
 // parameters.
-func InverseKinematics(desiredEndEffector XyzWxyz, dhParameters DhParameters) (StepperTheta, error) {
-	thetasInit := StepperTheta{0, 0, 0, 0, 0, 0}
+func InverseKinematics(desiredEndEffector XyzWxyz, dhParameters DhParameters) ([]float64, error) {
+	thetasInit := []float64{0, 0, 0, 0, 0, 0}
 	// Initialize an objective function for the optimization problem
 	objectiveFunction := func(s []float64) float64 {
-		stepperThetaTest := StepperTheta{s[0], s[1], s[2], s[3], s[4], s[5]}
-		currentEndEffector := ForwardKinematics(stepperThetaTest, dhParameters)
+		currentEndEffector := ForwardKinematics(s, dhParameters)
 
 		// Get XYZ offsets
 		xOffset := desiredEndEffector.X - currentEndEffector.X
@@ -157,9 +141,9 @@ func InverseKinematics(desiredEndEffector XyzWxyz, dhParameters DhParameters) (S
 	problem := optimize.Problem{Func: objectiveFunction}
 
 	// Solve
-	result, err := optimize.Minimize(problem, thetasInit.toFloat(), nil, nil)
+	result, err := optimize.Minimize(problem, thetasInit, nil, nil)
 	if err != nil {
-		return StepperTheta{}, err
+		return []float64{}, err
 	}
 	f := result.Location.F
 
@@ -170,20 +154,19 @@ func InverseKinematics(desiredEndEffector XyzWxyz, dhParameters DhParameters) (S
 		randTheta := func() float64 {
 			return 360 * rand.Float64()
 		}
-		randomSeed := StepperTheta{randTheta(), randTheta(), randTheta(), randTheta(), randTheta(), randTheta()}
+		randomSeed := []float64{randTheta(), randTheta(), randTheta(), randTheta(), randTheta(), randTheta()}
 
 		// Solve
-		result, err := optimize.Minimize(problem, randomSeed.toFloat(), nil, nil)
+		result, err := optimize.Minimize(problem, randomSeed, nil, nil)
 		if err != nil {
-			return StepperTheta{}, err
+			return []float64{}, err
 		}
 		f = result.Location.F
 		if i == MaxInverseKinematicIteration {
-			return StepperTheta{}, errors.New("Desired position out of range of the robotic arm.")
+			return []float64{}, errors.New("Desired position out of range of the robotic arm.")
 		}
 	}
-	r := result.Location.X
-	return StepperTheta{r[0], r[1], r[2], r[3], r[4], r[5]}, nil
+	return result.Location.X, nil
 }
 
 // matrixToQuaterian converts a rotation matrix to a quaterian. This code has
