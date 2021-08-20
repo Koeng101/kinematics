@@ -6,7 +6,7 @@ import (
 )
 
 func ExampleForwardKinematics() {
-	angles := kinematics.StepperTheta{10, 1, 1, 0, 0, 0}
+	angles := kinematics.StepperTheta{J1: 10, J2: 1, J3: 1, J4: 0, J5: 0, J6: 0}
 	coordinates := kinematics.ForwardKinematics(angles, kinematics.AR3DhParameters)
 
 	fmt.Println(coordinates)
@@ -14,7 +14,7 @@ func ExampleForwardKinematics() {
 }
 
 func ExampleInverseKinematics() {
-	coordinates := kinematics.XyzWxyz{-100, 250, 250, 0.4007833787652043, -0.021233218878182854, 0.9086418268616911, 0.41903052745255764}
+	coordinates := kinematics.XyzWxyz{X: -100, Y: 250, Z: 250, Qx: 0.4007833787652043, Qy: -0.021233218878182854, Qz: 0.9086418268616911, Qw: 0.41903052745255764}
 	angles, _ := kinematics.InverseKinematics(coordinates, kinematics.AR3DhParameters)
 
 	fmt.Println(angles)
