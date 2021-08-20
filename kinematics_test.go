@@ -8,7 +8,7 @@ import (
 )
 
 func TestForwardKinematics(t *testing.T) {
-	testThetas := JointAngles{10, 1, 1, 0, 0, 0}
+	testThetas := []float64{10, 1, 1, 0, 0, 0}
 	f := ForwardKinematics(testThetas, AR3DhParameters)
 	switch {
 	case f.Pos.X != -101.74590611879692:
@@ -144,8 +144,7 @@ func BenchmarkInverseKinematics(b *testing.B) {
 		return 360 * rand.Float64()
 	}
 	for i := 0; i < b.N; i++ {
-		randomSeed := JointAngles{randTheta(), randTheta(), randTheta(),
-			randTheta(), randTheta(), randTheta()}
+		randomSeed := []float64{randTheta(), randTheta(), randTheta(), randTheta(), randTheta(), randTheta()}
 		desiredEndEffector := ForwardKinematics(randomSeed, AR3DhParameters)
 		_, err := InverseKinematics(desiredEndEffector, AR3DhParameters, thetasInit)
 		if err != nil {
