@@ -29,7 +29,7 @@ func TestForwardKinematics(t *testing.T) {
 }
 
 func TestInverseKinematics(t *testing.T) {
-	desiredEndEffector := XyzWxyz{-91.72345062922584, 386.93155027870745, 382.30917872225154, 0.4007833787652043, -0.021233218878182854, 0.9086418268616911, 0.41903052745255764}
+	desiredEndEffector := XyzWxyz{-101.74590611879692, -65.96805988175777, -322.27756822304093, 0.06040824945687102, -0.20421099379003957, 0.2771553334491873, 0.9369277637862541}
 	_, err := InverseKinematics(desiredEndEffector, AR3DhParameters)
 	if err != nil {
 		t.Errorf("Inverse Kinematics failed with error: %s", err)
@@ -125,7 +125,7 @@ func TestMatrixToQuaterian(t *testing.T) {
 func BenchmarkInverseKinematics(b *testing.B) {
 	randTheta := func(joint int) float64 {
 		var randomTheta float64
-		for r := float64(-1); !(r < AR3DhParameters.StepperLimits[joint]*AR3DhParameters.StepsPerAngleDegree[joint]) || r < 0; {
+		for r := float64(-1); !(r < AR3DhParameters.StepperLimits[joint]*AR3DhParameters.StepsPerRadian[joint]) || r < 0; {
 			r = 360 * rand.Float64()
 			r = randomTheta
 		}

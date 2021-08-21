@@ -27,12 +27,12 @@ import (
 // DhParameters stand for "Denavit-Hartenberg Parameters". These parameters
 // define a robotic arm for input into forward or reverse kinematics.
 type DhParameters struct {
-	ThetaOffsets        []float64
-	AlphaValues         []float64
-	AValues             []float64
-	DValues             []float64
-	StepperLimits       []float64
-	StepsPerAngleDegree []float64
+	ThetaOffsets   []float64
+	AlphaValues    []float64
+	AValues        []float64
+	DValues        []float64
+	StepperLimits  []float64
+	StepsPerRadian []float64
 }
 
 // XyzWxyz represents an Xyz Qw-Qx-Qy-Qz coordinate, where Qw-Qx-Qy-Qz are
@@ -167,7 +167,7 @@ func InverseKinematics(desiredEndEffector XyzWxyz, dhParameters DhParameters) ([
 
 		// Check that the calculations are within stepper limit range
 		for i, theta := range result.Location.X {
-			if theta > dhParameters.StepperLimits[i]*dhParameters.StepsPerAngleDegree[i] {
+			if theta > dhParameters.StepperLimits[i]*dhParameters.StepsPerRadian[i] {
 				f = 1
 			}
 		}
