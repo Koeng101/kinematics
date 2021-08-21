@@ -19,5 +19,5 @@ var AR3DhParameters DhParameters = DhParameters{
 	AValues:        []float64{64.2, 305, 0, 0, 0, 0},
 	DValues:        []float64{169.77, 0, 0, -222.63, 0, -36.25},
 	StepperLimits:  []float64{15200, 7300, 7850, 15200, 4575, 6625},
-	StepsPerRadian: []float64{(1.8 / 10) * (math.Pi / 180), (1.8 / 50) * (math.Pi / 180), (1.8 / 50) * (math.Pi / 180), (1.8 / (13 + (212 / 289))) * (math.Pi / 180), (1.8) * (math.Pi / 180), (1.8 / (19 + (38 / 137))) * (math.Pi / 180)},
+	StepsPerRadian: []float64{(1.8 / 10) * (180 / math.Pi), (1.8 / 50) * (180 / math.Pi), (1.8 / 50) * (180 / math.Pi), (1.8 / (13 + (212 / 289))) * (180 / math.Pi), (1.8) * (180 / math.Pi), (1.8 / (19 + (38 / 137))) * (180 / math.Pi)},
 }
