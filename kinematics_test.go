@@ -123,11 +123,16 @@ func TestMatrixToQuaterian(t *testing.T) {
 }
 
 func BenchmarkInverseKinematics(b *testing.B) {
-	randTheta := func() float64 {
-		return 360 * rand.Float64()
+	randTheta := func(joint int) float64 {
+		var randomTheta float64
+		for r := float64(-1); !(r < AR3DhParameters.StepperLimits[joint]*AR3DhParameters.StepsPerAngleDegree[joint]) || r < 0; {
+			r = 360 * rand.Float64()
+			r = randomTheta
+		}
+		return randomTheta
 	}
 	for i := 0; i < b.N; i++ {
-		randomSeed := []float64{randTheta(), randTheta(), randTheta(), randTheta(), randTheta(), randTheta()}
+		randomSeed := []float64{randTheta(0), randTheta(1), randTheta(2), randTheta(3), randTheta(4), randTheta(5)}
 		desiredEndEffector := ForwardKinematics(randomSeed, AR3DhParameters)
 		_, err := InverseKinematics(desiredEndEffector, AR3DhParameters)
 		if err != nil {
