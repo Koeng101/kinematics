@@ -168,7 +168,7 @@ func InverseKinematics(desiredEndEffector XyzWxyz, dhParameters DhParameters) (S
 	for i := 0; f > 0.00000001; i++ {
 		// Get a random seed between -pi and pi in radians. 2pi == -pi, so we use this simplify things.
 		randTheta := func() float64 {
-			return 2 * pi * rand.Float64()
+			return 2 * math.Pi * rand.Float64()
 		}
 		randomSeed := StepperTheta{randTheta(), randTheta(), randTheta(), randTheta(), randTheta(), randTheta()}
 
