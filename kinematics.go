@@ -111,7 +111,7 @@ func ForwardKinematics(thetas StepperTheta, dhParameters DhParameters) XyzWxyz {
 		accumulatortMat = x
 	}
 
-	// Now that we have the final accumulatorMatrix, lets figure out the euler angles.
+	// Now that we have the final accumulatorMatrix, lets figure out the quaternions angles.
 	var output XyzWxyz
 	output.X = accumulatortMat.At(0, 3)
 	output.Y = accumulatortMat.At(1, 3)
@@ -122,7 +122,7 @@ func ForwardKinematics(thetas StepperTheta, dhParameters DhParameters) XyzWxyz {
 
 // MaxInverseKinematicIteration is the max number of times InverseKinematics
 // should try new seeds before failing. 50 is used here because it is
-// approximately the number of iterations that will take 1s to compute.
+// approximately the number of iterations that will take 1 second to compute.
 var MaxInverseKinematicIteration int = 50
 
 // InverseKinematics calculates joint angles to achieve an XyzWxyz end effector
@@ -164,11 +164,11 @@ func InverseKinematics(desiredEndEffector XyzWxyz, dhParameters DhParameters) (S
 	f := result.Location.F
 
 	// If the results aren't up to spec, queue up another theta seed and test again.
-	// We arbitrarily choose 10e-6 because that is small enough that the errors do not matter.
-	for i := 0; f > 0.000001; i++ {
-		// Get a random seed
+	// We arbitrarily choose 1e-6 because that is small enough that the errors do not matter.
+	for i := 0; f > 0.00000001; i++ {
+		// Get a random seed between -pi and pi in radians. 2pi == -pi, so we use this simplify things.
 		randTheta := func() float64 {
-			return 360 * rand.Float64()
+			return 2 * math.Pi * rand.Float64()
 		}
 		randomSeed := StepperTheta{randTheta(), randTheta(), randTheta(), randTheta(), randTheta(), randTheta()}
 
