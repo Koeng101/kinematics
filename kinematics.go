@@ -117,7 +117,7 @@ func ForwardKinematics(thetas JointAngles, dhParameters DhParameters) Pose {
 	}
 
 	// Now that we have the final accumulatorMatrix, lets figure out the
-	// quaternions angles.
+	// output Pose.
 	var output Pose
 	output.Pos.X = accumulatortMat.At(0, 3)
 	output.Pos.Y = accumulatortMat.At(1, 3)
