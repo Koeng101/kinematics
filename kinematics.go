@@ -18,10 +18,11 @@ package kinematics
 
 import (
 	"errors"
-	"gonum.org/v1/gonum/mat"
-	"gonum.org/v1/gonum/optimize"
 	"math"
 	"math/rand"
+
+	"gonum.org/v1/gonum/mat"
+	"gonum.org/v1/gonum/optimize"
 )
 
 // DhParameters stand for "Denavit-Hartenberg Parameters". These parameters
@@ -128,8 +129,8 @@ var MaxInverseKinematicIteration int = 50
 // InverseKinematics calculates joint angles to achieve an XyzWxyz end effector
 // position given the desired XyzWxyz coordinates and the robotic arm
 // parameters.
-func InverseKinematics(desiredEndEffector XyzWxyz, dhParameters DhParameters) (StepperTheta, error) {
-	thetasInit := StepperTheta{0, 0, 0, 0, 0, 0}
+func InverseKinematics(desiredEndEffector XyzWxyz, dhParameters DhParameters,
+	thetasInit StepperTheta) (StepperTheta, error) {
 	// Initialize an objective function for the optimization problem
 	objectiveFunction := func(s []float64) float64 {
 		stepperThetaTest := StepperTheta{s[0], s[1], s[2], s[3], s[4], s[5]}
@@ -140,8 +141,12 @@ func InverseKinematics(desiredEndEffector XyzWxyz, dhParameters DhParameters) (S
 		yOffset := desiredEndEffector.Y - currentEndEffector.Y
 		zOffset := desiredEndEffector.Z - currentEndEffector.Z
 
-		// Get rotational offsets. Essentially, do this in Golang (from python): np.arccos(np.clip(2*(np.dot(target_quat, source_quat)**2) - 1, -1, 1))
-		dotOffset := (desiredEndEffector.Qw * currentEndEffector.Qw) + (desiredEndEffector.Qx * currentEndEffector.Qx) + (desiredEndEffector.Qy * currentEndEffector.Qy) + (desiredEndEffector.Qz * currentEndEffector.Qz)
+		// Get rotational offsets. Essentially, do this in Golang (from python):
+		// np.arccos(np.clip(2*(np.dot(target_quat, source_quat)**2) - 1, -1, 1))
+		dotOffset := (desiredEndEffector.Qw * currentEndEffector.Qw) +
+			(desiredEndEffector.Qx * currentEndEffector.Qx) +
+			(desiredEndEffector.Qy * currentEndEffector.Qy) +
+			(desiredEndEffector.Qz * currentEndEffector.Qz)
 		dotOffset = (2*(dotOffset*dotOffset) - 1)
 		if dotOffset > 1 {
 			dotOffset = 1
@@ -149,7 +154,10 @@ func InverseKinematics(desiredEndEffector XyzWxyz, dhParameters DhParameters) (S
 		rotationalOffset := math.Acos(dotOffset)
 
 		// Get the error vector
-		errorVector := ((xOffset * xOffset) + (yOffset * yOffset) + (zOffset * zOffset) + (rotationalOffset * rotationalOffset)) * 0.25
+		errorVector := ((xOffset * xOffset) +
+			(yOffset * yOffset) +
+			(zOffset * zOffset) +
+			(rotationalOffset * rotationalOffset)) * 0.25
 
 		return errorVector
 	}
@@ -179,7 +187,7 @@ func InverseKinematics(desiredEndEffector XyzWxyz, dhParameters DhParameters) (S
 		}
 		f = result.Location.F
 		if i == MaxInverseKinematicIteration {
-			return StepperTheta{}, errors.New("Desired position out of range of the robotic arm.")
+			return StepperTheta{}, errors.New("desired position out of range of the robotic arm")
 		}
 	}
 	r := result.Location.X

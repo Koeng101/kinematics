@@ -1,9 +1,10 @@
 package kinematics
 
 import (
-	"gonum.org/v1/gonum/mat"
 	"math/rand"
 	"testing"
+
+	"gonum.org/v1/gonum/mat"
 )
 
 func TestForwardKinematics(t *testing.T) {
@@ -28,15 +29,23 @@ func TestForwardKinematics(t *testing.T) {
 }
 
 func TestInverseKinematics(t *testing.T) {
-	desiredEndEffector := XyzWxyz{-91.72345062922584, 386.93155027870745, 382.30917872225154, 0.4007833787652043, -0.021233218878182854, 0.9086418268616911, 0.41903052745255764}
-	_, err := InverseKinematics(desiredEndEffector, AR3DhParameters)
+	thetasInit := StepperTheta{0, 0, 0, 0, 0, 0}
+	desiredEndEffector := XyzWxyz{
+		-91.72345062922584,
+		386.93155027870745,
+		382.30917872225154,
+		0.4007833787652043,
+		-0.021233218878182854,
+		0.9086418268616911,
+		0.41903052745255764}
+	_, err := InverseKinematics(desiredEndEffector, AR3DhParameters, thetasInit)
 	if err != nil {
 		t.Errorf("Inverse Kinematics failed with error: %s", err)
 	}
 
 	// This case should fail because the X required is too large
 	desiredEndEffector = XyzWxyz{-91000000.72345062922584, 386.93155027870745, 382.30917872225154, 0.4007833787652043, -0.021233218878182854, 0.9086418268616911, 0.41903052745255764}
-	_, err = InverseKinematics(desiredEndEffector, AR3DhParameters)
+	_, err = InverseKinematics(desiredEndEffector, AR3DhParameters, thetasInit)
 	if err == nil {
 		t.Errorf("Inverse Kinematics should have failed with large X")
 	}
@@ -122,13 +131,14 @@ func TestMatrixToQuaterian(t *testing.T) {
 }
 
 func BenchmarkInverseKinematics(b *testing.B) {
+	thetasInit := StepperTheta{0, 0, 0, 0, 0, 0}
 	randTheta := func() float64 {
 		return 360 * rand.Float64()
 	}
 	for i := 0; i < b.N; i++ {
 		randomSeed := StepperTheta{randTheta(), randTheta(), randTheta(), randTheta(), randTheta(), randTheta()}
 		desiredEndEffector := ForwardKinematics(randomSeed, AR3DhParameters)
-		_, err := InverseKinematics(desiredEndEffector, AR3DhParameters)
+		_, err := InverseKinematics(desiredEndEffector, AR3DhParameters, thetasInit)
 		if err != nil {
 			b.Errorf("Failed inverse kinematics benchmark with: %s\nSeed: %f-%f-%f-%f-%f-%f", err, randomSeed.J1, randomSeed.J2, randomSeed.J3, randomSeed.J4, randomSeed.J5, randomSeed.J6)
 		}
