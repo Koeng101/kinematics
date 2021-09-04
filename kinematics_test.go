@@ -2,11 +2,45 @@ package kinematics
 
 import (
 	"fmt"
-	"math/rand"
 	"testing"
 
 	"gonum.org/v1/gonum/mat"
 )
+
+func TestApproxEquals(t *testing.T) {
+	p0 := Position{1, 2, 3}
+	p1 := Position{1 + 1.1e-6, 2 - 3e-7, 3 + 2.45e-6}
+	tol := 1e-5
+	if !p0.ApproxEqual(p1, tol) {
+		t.Errorf("ApproxEqual failed at tol %f with p0: %+v, p1: %+v", tol, p0, p1)
+	}
+	tol = 1e-6
+	if p0.ApproxEqual(p1, tol) {
+		t.Errorf("ApproxEqual failed at tol %f with p0: %+v, p1: %+v", tol, p0, p1)
+	}
+
+	q0 := Quaternion{1, 2, 3, 4}
+	q1 := Quaternion{-1, -2, -3, -4}
+	if !q0.ApproxEqual(q1, tol) {
+		t.Errorf("ApproxEqual failed for negative quaternions q0: %+v, q1: %+v", q0, q1)
+	}
+
+	tol = 1e-5
+	q1 = Quaternion{-1 + 2.345e-6, -2 - 4.3e-7, -3 + 2e-6, -4}
+	if !q0.ApproxEqual(q1, tol) {
+		t.Errorf("ApproxEqual failed for close negative quaternions q0: %+v, q1: %+v", q0, q1)
+	}
+	q1 = Quaternion{1 + 2.345e-6, 2 - 4.3e-7, 3 + 2e-6, 4}
+	if !q0.ApproxEqual(q1, tol) {
+		t.Errorf("ApproxEqual failed for close quaternions q0: %+v, q1: %+v", q0, q1)
+	}
+
+	tol = 1e-7
+	q1 = Quaternion{1 + 2.345e-6, 2 - 4.3e-7, 3 + 2e-6, 4}
+	if q0.ApproxEqual(q1, tol) {
+		t.Errorf("ApproxEqual failed for close quaternions q0: %+v, q1: %+v", q0, q1)
+	}
+}
 
 func TestForwardKinematics(t *testing.T) {
 	testThetas := []float64{10, 1, 1, 0, 0, 0}
@@ -30,7 +64,7 @@ func TestForwardKinematics(t *testing.T) {
 }
 
 func TestInverseKinematics(t *testing.T) {
-	thetasInit := JointAngles{0, 0, 0, 0, 0, 0}
+	thetasInit := []float64{0, 0, 0, 0, 0, 0}
 	desiredEndEffector := Pose{
 		Position{
 			-91.72345062922584,
@@ -62,6 +96,27 @@ func TestInverseKinematics(t *testing.T) {
 	}
 }
 
+func TestInverseKinematicsSevDOF(t *testing.T) {
+	thetasInit := []float64{0, 0, 0, 0, 0, 0, 0}
+
+	thetasTarg := []float64{0, 0, 0, 0, 0, 0, 0}
+	for i := range thetasTarg {
+		thetasTarg[i] = RandTheta() * 0.1
+	}
+	pTarg := ForwardKinematics(thetasTarg, SevDOFDhParameters)
+
+	thetasSolve, err := InverseKinematics(pTarg, SevDOFDhParameters, thetasInit)
+	if err != nil {
+		t.Errorf("Inverse Kinematics failed with error: %s", err)
+	}
+	pSolve := ForwardKinematics(thetasSolve, SevDOFDhParameters)
+
+	if !pSolve.ApproxEqual(pTarg, 1e-3) {
+		t.Errorf("Inverse Kinematics didn't arrive at the correct"+
+			" solution: %+v", pSolve)
+	}
+}
+
 func TestMatrixToQuaterion(t *testing.T) {
 	var q Quaternion
 
@@ -71,7 +126,7 @@ func TestMatrixToQuaterion(t *testing.T) {
 		0, 0, 1, 0,
 		0, 0, 0, 1,
 	})
-	q = matrixToQuaterion(accumulatortMat1)
+	q = MatrixToQuaterion(accumulatortMat1)
 	switch {
 	case q.W != 1:
 		t.Errorf("Failed mat1 with q.W = %f", q.W)
@@ -90,7 +145,7 @@ func TestMatrixToQuaterion(t *testing.T) {
 		0, 0, -1, 0,
 		0, 0, 0, 0,
 	})
-	q = matrixToQuaterion(accumulatortMat2)
+	q = MatrixToQuaterion(accumulatortMat2)
 	switch {
 	case q.W != 0:
 		t.Errorf("Failed mat2 with qw = %f", q.W)
@@ -108,7 +163,7 @@ func TestMatrixToQuaterion(t *testing.T) {
 		0, 0, -2, 0,
 		0, 0, 0, 1,
 	})
-	q = matrixToQuaterion(accumulatortMat3)
+	q = MatrixToQuaterion(accumulatortMat3)
 	switch {
 	case q.W != 0:
 		t.Errorf("Failed mat3 with q.W = %f", q.W)
@@ -126,7 +181,7 @@ func TestMatrixToQuaterion(t *testing.T) {
 		0, 0, 0, 0,
 		0, 0, 0, 1,
 	})
-	q = matrixToQuaterion(accumulatortMat4)
+	q = MatrixToQuaterion(accumulatortMat4)
 	switch {
 	case q.W != 0:
 		t.Errorf("Failed mat4 with q.W = %f", q.W)
@@ -140,12 +195,11 @@ func TestMatrixToQuaterion(t *testing.T) {
 }
 
 func BenchmarkInverseKinematics(b *testing.B) {
-	thetasInit := JointAngles{0, 0, 0, 0, 0, 0}
-	randTheta := func() float64 {
-		return 360 * rand.Float64()
-	}
+	thetasInit := []float64{0, 0, 0, 0, 0, 0}
+
 	for i := 0; i < b.N; i++ {
-		randomSeed := []float64{randTheta(), randTheta(), randTheta(), randTheta(), randTheta(), randTheta()}
+		randomSeed := []float64{RandTheta(), RandTheta(), RandTheta(),
+			RandTheta(), RandTheta(), RandTheta()}
 		desiredEndEffector := ForwardKinematics(randomSeed, AR3DhParameters)
 		_, err := InverseKinematics(desiredEndEffector, AR3DhParameters, thetasInit)
 		if err != nil {
@@ -162,12 +216,18 @@ func ExampleForwardKinematics() {
 	coordinates := ForwardKinematics(angles, AR3DhParameters)
 
 	fmt.Println(coordinates)
-	// Output: {-101.74590611879692 -65.96805988175777 -322.27756822304093 0.06040824945687102 -0.20421099379003957 0.2771553334491873 0.9369277637862541}
+	// Output: {{-101.74590611879692 -65.96805988175777 -322.27756822304093} {0.9369277637862541 0.06040824945687102 -0.20421099379003957 0.2771553334491873}}
 }
 
 func ExampleInverseKinematics() {
-	coordinates := XyzWxyz{X: -100, Y: 250, Z: 250, Qx: 0.4007833787652043, Qy: -0.021233218878182854, Qz: 0.9086418268616911, Qw: 0.41903052745255764}
-	angles, _ := InverseKinematics(coordinates, AR3DhParameters)
+	coordinates := Pose{Position{X: -100, Y: 250, Z: 250},
+		Quaternion{
+			X: 0.4007833787652043,
+			Y: -0.021233218878182854,
+			Z: 0.9086418268616911,
+			W: 0.41903052745255764}}
+	initThetas := []float64{0, 0, 0, 0, 0, 0}
+	angles, _ := InverseKinematics(coordinates, AR3DhParameters, initThetas)
 
 	fmt.Println(angles)
 	// Output: [1.8462740950010432 0.3416721655970939 -2.313720459511564 -1.7765008677785283 2.2218097507147707 1.2318789996199948]

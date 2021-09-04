@@ -55,11 +55,51 @@ type Pose struct {
 	Rot Quaternion
 }
 
+// ApproxEqual checks if this Quaternion is approximately equal to another
+// Quaternion. This checks the positive and negative Quaternion (which are
+// equivalent).
+func (quatA Quaternion) ApproxEqual(quatB Quaternion, tol float64) bool {
+	isEqual := false
+	if (math.Abs(quatA.X-quatB.X) < tol) &&
+		(math.Abs(quatA.Y-quatB.Y) < tol) &&
+		(math.Abs(quatA.Z-quatB.Z) < tol) &&
+		(math.Abs(quatA.W-quatB.W) < tol) {
+		isEqual = true
+	} else if (math.Abs(quatA.X+quatB.X) < tol) &&
+		(math.Abs(quatA.Y+quatB.Y) < tol) &&
+		(math.Abs(quatA.Z+quatB.Z) < tol) &&
+		(math.Abs(quatA.W+quatB.W) < tol) {
+		isEqual = true
+	}
+	return isEqual
+}
+
+// ApproxEqual checks if two Positions are approximately equal.
+func (posA Position) ApproxEqual(posB Position, tol float64) bool {
+	isEqual := false
+	if math.Abs(posA.X-posB.X) < tol && math.Abs(posA.Y-posB.Y) < tol &&
+		math.Abs(posA.Z-posB.Z) < tol {
+		isEqual = true
+	}
+	return isEqual
+}
+
+// ApproxEqual checks if two Poses are approximately equal.
+func (poseA Pose) ApproxEqual(poseB Pose, tol float64) bool {
+	return poseA.Pos.ApproxEqual(poseB.Pos, tol) &&
+		poseA.Rot.ApproxEqual(poseB.Rot, tol)
+}
+
+// RandTheta creates a random value from -pi to pi
+func RandTheta() float64 {
+	return 2 * math.Pi * (rand.Float64() - 0.5)
+}
+
 // ForwardKinematics calculates the end effector Pose coordinates given
 // joint angles and robotic arm parameters.
-func ForwardKinematics(thetas []float64, dhParameters DhParameters) XyzWxyz {
-	// First, setup variables. We use 4 variables - theta, alpha, a and d to calculate a matrix
-	// which is then multiplied to an accumulator matrix.
+func ForwardKinematics(thetas []float64, dhParameters DhParameters) Pose {
+	// First, setup variables. We use 4 variables - theta, alpha, a and d to
+	// calculate a matrix which is then multiplied to an accumulator matrix.
 	var theta float64
 	var alpha float64
 	var a float64
@@ -112,7 +152,7 @@ func ForwardKinematics(thetas []float64, dhParameters DhParameters) XyzWxyz {
 	output.Pos.X = accumulatortMat.At(0, 3)
 	output.Pos.Y = accumulatortMat.At(1, 3)
 	output.Pos.Z = accumulatortMat.At(2, 3)
-	output.Rot = matrixToQuaterion(accumulatortMat)
+	output.Rot = MatrixToQuaterion(accumulatortMat)
 	return output
 }
 
@@ -124,8 +164,8 @@ var MaxInverseKinematicIteration int = 50
 // InverseKinematics calculates joint angles to achieve an XyzWxyz end effector
 // position given the desired XyzWxyz coordinates and the robotic arm
 // parameters.
-func InverseKinematics(desiredEndEffector Pose, dhParameters DhParameters) ([]float64, error) {
-	thetasInit := []float64{0, 0, 0, 0, 0, 0}
+func InverseKinematics(desiredEndEffector Pose, dhParameters DhParameters,
+	thetasInit []float64) ([]float64, error) {
 	// Initialize an objective function for the optimization problem
 	objectiveFunction := func(s []float64) float64 {
 		currentEndEffector := ForwardKinematics(s, dhParameters)
@@ -169,13 +209,11 @@ func InverseKinematics(desiredEndEffector Pose, dhParameters DhParameters) ([]fl
 	// again. We arbitrarily choose 1e-6 because that is small enough that the
 	// errors do not matter.
 	for i := 0; f > 1e-6; i++ {
-		// Get a random seed between -pi and pi in radians. 2pi == -pi, so we
-		// use this simplify things.
-		randTheta := func() float64 {
-			return 2 * math.Pi * rand.Float64()
+		// Get a random seed between -pi and pi in radians.
+		randomSeed := make([]float64, len(thetasInit))
+		for j := range randomSeed {
+			randomSeed[j] = RandTheta()
 		}
-		randomSeed := []float64{randTheta(), randTheta(), randTheta(), randTheta(), randTheta(), randTheta()}
-
 		// Solve
 		result, err := optimize.Minimize(problem, randomSeed, nil, nil)
 		if err != nil {
@@ -183,16 +221,17 @@ func InverseKinematics(desiredEndEffector Pose, dhParameters DhParameters) ([]fl
 		}
 		f = result.Location.F
 		if i == MaxInverseKinematicIteration {
-			return []float64{}, errors.New("Desired position out of range of the robotic arm.")
+			return []float64{}, errors.New("desired position out of range of" +
+				" the robotic arm")
 		}
 	}
 	return result.Location.X, nil
 }
 
-// matrixToQuaterion converts a rotation matrix to a quaterion. This code has
+// MatrixToQuaterion converts a rotation matrix to a quaterion. This code has
 // been tested in all cases vs the python implementation with scipy rotation
 // and works properly.
-func matrixToQuaterion(accumulatortMat *mat.Dense) Quaternion {
+func MatrixToQuaterion(accumulatortMat *mat.Dense) Quaternion {
 	// http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
 	var qw float64
 	var qx float64

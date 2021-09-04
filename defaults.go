@@ -13,3 +13,11 @@ var AR3DhParameters DhParameters = DhParameters{
 	AValues:      []float64{64.2, 305, 0, 0, 0, 0},
 	DValues:      []float64{169.77, 0, 0, -222.63, 0, -36.25},
 }
+
+// Denavit-Hartenberg Parameters of a ficticious 7-DOF arm
+var SevDOFDhParameters DhParameters = DhParameters{
+	ThetaOffsets: []float64{0, 0, 0, 0, 0, 0, 0},
+	AlphaValues:  []float64{-math.Pi / 2, math.Pi / 2, -math.Pi / 2, math.Pi / 2, -math.Pi / 2, 0, 0},
+	AValues:      []float64{0, 200, 250, 300, 200, 200, 100},
+	DValues:      []float64{500, 0, 0, 0, 0, 0, 0},
+}
