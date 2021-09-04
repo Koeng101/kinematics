@@ -4,7 +4,6 @@ import (
 	"math/rand"
 	"testing"
 
-	quat "github.com/westphae/quaternion"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -36,7 +35,7 @@ func TestInverseKinematics(t *testing.T) {
 			-91.72345062922584,
 			386.93155027870745,
 			382.30917872225154},
-		quat.Quaternion{
+		Quaternion{
 			W: 0.41903052745255764,
 			X: 0.4007833787652043,
 			Y: -0.021233218878182854,
@@ -51,7 +50,7 @@ func TestInverseKinematics(t *testing.T) {
 		Position{-91000000.72345062922584,
 			386.93155027870745,
 			382.30917872225154},
-		quat.Quaternion{
+		Quaternion{
 			W: 0.41903052745255764,
 			X: 0.4007833787652043,
 			Y: -0.021233218878182854,
@@ -63,7 +62,7 @@ func TestInverseKinematics(t *testing.T) {
 }
 
 func TestMatrixToQuaterion(t *testing.T) {
-	var q quat.Quaternion
+	var q Quaternion
 
 	// Test tr > 0
 	accumulatortMat1 := mat.NewDense(4, 4, []float64{1, 0, 0, 0,

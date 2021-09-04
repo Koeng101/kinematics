@@ -21,7 +21,6 @@ import (
 	"math"
 	"math/rand"
 
-	quat "github.com/westphae/quaternion"
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/optimize"
 )
@@ -49,6 +48,13 @@ func (st *JointAngles) toFloat() []float64 {
 	return []float64{st.J1, st.J2, st.J3, st.J4, st.J5, st.J6}
 }
 
+type Quaternion struct {
+	W float64
+	X float64
+	Y float64
+	Z float64
+}
+
 // Position represents a position in 3D cartesian space.
 type Position struct {
 	X float64
@@ -60,7 +66,7 @@ type Position struct {
 // component, and Rot is the quaternion representing the rotation.
 type Pose struct {
 	Pos Position
-	Rot quat.Quaternion
+	Rot Quaternion
 }
 
 // ForwardKinematics calculates the end effector Pose coordinates given
@@ -203,10 +209,10 @@ func InverseKinematics(desiredEndEffector Pose, dhParameters DhParameters,
 	return JointAngles{r[0], r[1], r[2], r[3], r[4], r[5]}, nil
 }
 
-// matrixToQuaterion converts a rotation matrix to a quaterian. This code has
+// matrixToQuaterion converts a rotation matrix to a quaterion. This code has
 // been tested in all cases vs the python implementation with scipy rotation
 // and works properly.
-func matrixToQuaterion(accumulatortMat *mat.Dense) quat.Quaternion {
+func matrixToQuaterion(accumulatortMat *mat.Dense) Quaternion {
 	// http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
 	var qw float64
 	var qx float64
@@ -246,5 +252,5 @@ func matrixToQuaterion(accumulatortMat *mat.Dense) quat.Quaternion {
 		qy = (accumulatortMat.At(2, 1) + accumulatortMat.At(1, 2)) / s
 		qz = 0.25 * s
 	}
-	return quat.Quaternion{W: qw, X: qx, Y: qy, Z: qz}
+	return Quaternion{W: qw, X: qx, Y: qy, Z: qz}
 }
