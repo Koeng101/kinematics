@@ -2,12 +2,12 @@
 Package kinematics calculates forward and inverse kinematics for robotic arm
 systems.
 
-Forward kinematics takes joint angles and returns an XyzWxyz coordinate of the
-end effector. Inverse kinematics takes an XyzWxyz coordinate and returns joint
-angles that move the end effector to that coordinate.
+Forward kinematics takes joint angles and returns the end effector Pose. Inverse
+kinematics takes a Pose and returns joint angles that move the end effector to
+that Pose.
 
- ForwardKinematics (joint angles	-> xyzwxyz)
- InverseKinematics (xyzwxyz	-> joint angles)
+ ForwardKinematics (joint angles	-> Pose)
+ InverseKinematics (Pose	-> joint angles)
 
 Each function also requires a Denavit-Hartenberg Parameter set for the arm of
 interest. This package provides defaults for the following arm systems:
