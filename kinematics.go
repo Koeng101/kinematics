@@ -35,7 +35,7 @@ type DhParameters struct {
 	DValues      [6]float64
 }
 
-// JointAngles represents angles of the joints.
+// JointAngles represents angles of the joints in radians.
 type JointAngles struct {
 	J1 float64
 	J2 float64
