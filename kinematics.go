@@ -21,6 +21,7 @@ import (
 	"math"
 	"math/rand"
 
+	quat "github.com/westphae/quaternion"
 	"gonum.org/v1/gonum/mat"
 	"gonum.org/v1/gonum/optimize"
 )
@@ -48,15 +49,6 @@ func (st *JointAngles) toFloat() []float64 {
 	return []float64{st.J1, st.J2, st.J3, st.J4, st.J5, st.J6}
 }
 
-// Quaternion represents a quaternion, which can be used to represent rotations
-// in 3 space.
-type Quaternion struct {
-	Qx float64
-	Qy float64
-	Qz float64
-	Qw float64
-}
-
 // Position represents a position in 3D cartesian space.
 type Position struct {
 	X float64
@@ -68,7 +60,7 @@ type Position struct {
 // component, and Rot is the quaternion representing the rotation.
 type Pose struct {
 	Pos Position
-	Rot Quaternion
+	Rot quat.Quaternion
 }
 
 // ForwardKinematics calculates the end effector Pose coordinates given
@@ -156,10 +148,10 @@ func InverseKinematics(desiredEndEffector Pose, dhParameters DhParameters,
 
 		// Get rotational offsets. Essentially, do this in Golang (from python):
 		// np.arccos(np.clip(2*(np.dot(target_quat, source_quat)**2) - 1, -1, 1))
-		dotOffset := (desiredEndEffector.Rot.Qw * currentEndEffector.Rot.Qw) +
-			(desiredEndEffector.Rot.Qx * currentEndEffector.Rot.Qx) +
-			(desiredEndEffector.Rot.Qy * currentEndEffector.Rot.Qy) +
-			(desiredEndEffector.Rot.Qz * currentEndEffector.Rot.Qz)
+		dotOffset := (desiredEndEffector.Rot.W * currentEndEffector.Rot.W) +
+			(desiredEndEffector.Rot.X * currentEndEffector.Rot.X) +
+			(desiredEndEffector.Rot.Y * currentEndEffector.Rot.Y) +
+			(desiredEndEffector.Rot.Z * currentEndEffector.Rot.Z)
 		dotOffset = (2*(dotOffset*dotOffset) - 1)
 		if dotOffset > 1 {
 			dotOffset = 1
@@ -214,7 +206,7 @@ func InverseKinematics(desiredEndEffector Pose, dhParameters DhParameters,
 // matrixToQuaterion converts a rotation matrix to a quaterian. This code has
 // been tested in all cases vs the python implementation with scipy rotation
 // and works properly.
-func matrixToQuaterion(accumulatortMat *mat.Dense) Quaternion {
+func matrixToQuaterion(accumulatortMat *mat.Dense) quat.Quaternion {
 	// http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
 	var qw float64
 	var qx float64
@@ -254,5 +246,5 @@ func matrixToQuaterion(accumulatortMat *mat.Dense) Quaternion {
 		qy = (accumulatortMat.At(2, 1) + accumulatortMat.At(1, 2)) / s
 		qz = 0.25 * s
 	}
-	return Quaternion{qx, qy, qz, qw}
+	return quat.Quaternion{W: qw, X: qx, Y: qy, Z: qz}
 }

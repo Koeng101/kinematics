@@ -4,6 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
+	quat "github.com/westphae/quaternion"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -12,19 +13,19 @@ func TestForwardKinematics(t *testing.T) {
 	f := ForwardKinematics(testThetas, AR3DhParameters)
 	switch {
 	case f.Pos.X != -101.74590611879692:
-		t.Errorf("Forward kinematics failed on f.X = %f", f.Pos.X)
+		t.Errorf("Forward kinematics failed on f.Pos.X = %f", f.Pos.X)
 	case f.Pos.Y != -65.96805988175777:
-		t.Errorf("Forward kinematics failed on f.Y = %f", f.Pos.Y)
+		t.Errorf("Forward kinematics failed on f.Pos.Y = %f", f.Pos.Y)
 	case f.Pos.Z != -322.27756822304093:
-		t.Errorf("Forward kinematics failed on f.Z = %f", f.Pos.Z)
-	case f.Rot.Qx != 0.06040824945687102:
-		t.Errorf("Forward kinematics failed on f.Qx = %f", f.Rot.Qx)
-	case f.Rot.Qy != -0.20421099379003957:
-		t.Errorf("Forward kinematics failed on f.Qy = %f", f.Rot.Qy)
-	case f.Rot.Qz != 0.2771553334491873:
-		t.Errorf("Forward kinematics failed on f.Qz = %f", f.Rot.Qz)
-	case f.Rot.Qw != 0.9369277637862541:
-		t.Errorf("Forward kinematics failed on f.Qw = %f", f.Rot.Qw)
+		t.Errorf("Forward kinematics failed on f.Pos.Z = %f", f.Pos.Z)
+	case f.Rot.X != 0.06040824945687102:
+		t.Errorf("Forward kinematics failed on f.Rot.X = %f", f.Rot.X)
+	case f.Rot.Y != -0.20421099379003957:
+		t.Errorf("Forward kinematics failed on f.Rot.Y = %f", f.Rot.Y)
+	case f.Rot.Z != 0.2771553334491873:
+		t.Errorf("Forward kinematics failed on f.Rot.Z = %f", f.Rot.Z)
+	case f.Rot.W != 0.9369277637862541:
+		t.Errorf("Forward kinematics failed on f.Rot.W = %f", f.Rot.W)
 	}
 }
 
@@ -35,11 +36,11 @@ func TestInverseKinematics(t *testing.T) {
 			-91.72345062922584,
 			386.93155027870745,
 			382.30917872225154},
-		Quaternion{
-			0.4007833787652043,
-			-0.021233218878182854,
-			0.9086418268616911,
-			0.41903052745255764}}
+		quat.Quaternion{
+			W: 0.41903052745255764,
+			X: 0.4007833787652043,
+			Y: -0.021233218878182854,
+			Z: 0.9086418268616911}}
 	_, err := InverseKinematics(desiredEndEffector, AR3DhParameters, thetasInit)
 	if err != nil {
 		t.Errorf("Inverse Kinematics failed with error: %s", err)
@@ -50,11 +51,11 @@ func TestInverseKinematics(t *testing.T) {
 		Position{-91000000.72345062922584,
 			386.93155027870745,
 			382.30917872225154},
-		Quaternion{
-			0.4007833787652043,
-			-0.021233218878182854,
-			0.9086418268616911,
-			0.41903052745255764}}
+		quat.Quaternion{
+			W: 0.41903052745255764,
+			X: 0.4007833787652043,
+			Y: -0.021233218878182854,
+			Z: 0.9086418268616911}}
 	_, err = InverseKinematics(desiredEndEffector, AR3DhParameters, thetasInit)
 	if err == nil {
 		t.Errorf("Inverse Kinematics should have failed with large X")
@@ -62,7 +63,7 @@ func TestInverseKinematics(t *testing.T) {
 }
 
 func TestMatrixToQuaterion(t *testing.T) {
-	var quat Quaternion
+	var q quat.Quaternion
 
 	// Test tr > 0
 	accumulatortMat1 := mat.NewDense(4, 4, []float64{1, 0, 0, 0,
@@ -70,16 +71,16 @@ func TestMatrixToQuaterion(t *testing.T) {
 		0, 0, 1, 0,
 		0, 0, 0, 1,
 	})
-	quat = matrixToQuaterion(accumulatortMat1)
+	q = matrixToQuaterion(accumulatortMat1)
 	switch {
-	case quat.Qw != 1:
-		t.Errorf("Failed mat1 with qw = %f", quat.Qw)
-	case quat.Qx != 0:
-		t.Errorf("Failed mat1 with qx = %f", quat.Qx)
-	case quat.Qy != 0:
-		t.Errorf("Failed mat1 with qy = %f", quat.Qy)
-	case quat.Qz != 0:
-		t.Errorf("Failed mat1 with qz = %f", quat.Qz)
+	case q.W != 1:
+		t.Errorf("Failed mat1 with q.W = %f", q.W)
+	case q.X != 0:
+		t.Errorf("Failed mat1 with q.X = %f", q.X)
+	case q.Y != 0:
+		t.Errorf("Failed mat1 with q.Y = %f", q.Y)
+	case q.Z != 0:
+		t.Errorf("Failed mat1 with q.Z = %f", q.Z)
 	}
 
 	// Test (accumulatortMat.At(0, 0) > accumulatortMat.At(1, 1)) &&
@@ -89,16 +90,16 @@ func TestMatrixToQuaterion(t *testing.T) {
 		0, 0, -1, 0,
 		0, 0, 0, 0,
 	})
-	quat = matrixToQuaterion(accumulatortMat2)
+	q = matrixToQuaterion(accumulatortMat2)
 	switch {
-	case quat.Qw != 0:
-		t.Errorf("Failed mat2 with qw = %f", quat.Qw)
-	case quat.Qx != 1:
-		t.Errorf("Failed mat2 with qx = %f", quat.Qx)
-	case quat.Qy != 0:
-		t.Errorf("Failed mat2 with qy = %f", quat.Qy)
-	case quat.Qz != 0:
-		t.Errorf("Failed mat2 with qz = %f", quat.Qz)
+	case q.W != 0:
+		t.Errorf("Failed mat2 with qw = %f", q.W)
+	case q.X != 1:
+		t.Errorf("Failed mat2 with q.X = %f", q.X)
+	case q.Y != 0:
+		t.Errorf("Failed mat2 with q.Y = %f", q.Y)
+	case q.Z != 0:
+		t.Errorf("Failed mat2 with q.Z = %f", q.Z)
 	}
 
 	// Test accumulatortMat.At(1, 1) > accumulatortMat.At(2, 2)
@@ -107,16 +108,16 @@ func TestMatrixToQuaterion(t *testing.T) {
 		0, 0, -2, 0,
 		0, 0, 0, 1,
 	})
-	quat = matrixToQuaterion(accumulatortMat3)
+	q = matrixToQuaterion(accumulatortMat3)
 	switch {
-	case quat.Qw != 0:
-		t.Errorf("Failed mat3 with qw = %f", quat.Qw)
-	case quat.Qx != 0:
-		t.Errorf("Failed mat3 with qx = %f", quat.Qx)
-	case quat.Qy != 1:
-		t.Errorf("Failed mat3 with qy = %f", quat.Qy)
-	case quat.Qz != 0:
-		t.Errorf("Failed mat3 with qz = %f", quat.Qz)
+	case q.W != 0:
+		t.Errorf("Failed mat3 with q.W = %f", q.W)
+	case q.X != 0:
+		t.Errorf("Failed mat3 with q.X = %f", q.X)
+	case q.Y != 1:
+		t.Errorf("Failed mat3 with q.Y = %f", q.Y)
+	case q.Z != 0:
+		t.Errorf("Failed mat3 with q.Z = %f", q.Z)
 	}
 
 	// Test default
@@ -125,16 +126,16 @@ func TestMatrixToQuaterion(t *testing.T) {
 		0, 0, 0, 0,
 		0, 0, 0, 1,
 	})
-	quat = matrixToQuaterion(accumulatortMat4)
+	q = matrixToQuaterion(accumulatortMat4)
 	switch {
-	case quat.Qw != 0:
-		t.Errorf("Failed mat4 with qw = %f", quat.Qw)
-	case quat.Qx != 0:
-		t.Errorf("Failed mat4 with qx = %f", quat.Qx)
-	case quat.Qy != 0:
-		t.Errorf("Failed mat4 with qy = %f", quat.Qy)
-	case quat.Qz != 1:
-		t.Errorf("Failed mat4 with qz = %f", quat.Qz)
+	case q.W != 0:
+		t.Errorf("Failed mat4 with q.W = %f", q.W)
+	case q.X != 0:
+		t.Errorf("Failed mat4 with q.X = %f", q.X)
+	case q.Y != 0:
+		t.Errorf("Failed mat4 with q.Y = %f", q.Y)
+	case q.Z != 1:
+		t.Errorf("Failed mat4 with q.Z = %f", q.Z)
 	}
 }
 
