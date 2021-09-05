@@ -162,7 +162,7 @@ func ForwardKinematics(thetas []float64, dhParameters DhParameters) Pose {
 var MaxInverseKinematicIteration int = 50
 
 // InverseKinematics calculates joint angles to achieve a desired end effector
-// Pose robotic arm DH parameters and the intial joint angles.
+// Pose, robotic arm DH parameters and the intial joint angles.
 func InverseKinematics(desiredEndEffector Pose, dhParameters DhParameters,
 	thetasInit []float64) ([]float64, error) {
 	// Initialize an objective function for the optimization problem
