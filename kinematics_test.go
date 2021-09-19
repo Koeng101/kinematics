@@ -117,7 +117,7 @@ func TestInverseKinematicsSevDOF(t *testing.T) {
 	}
 }
 
-func TestMatrixToQuaterion(t *testing.T) {
+func TestmatrixToQuaterion(t *testing.T) {
 	var q Quaternion
 
 	// Test tr > 0
@@ -126,7 +126,7 @@ func TestMatrixToQuaterion(t *testing.T) {
 		0, 0, 1, 0,
 		0, 0, 0, 1,
 	})
-	q = MatrixToQuaterion(accumulatortMat1)
+	q = matrixToQuaterion(accumulatortMat1)
 	switch {
 	case q.W != 1:
 		t.Errorf("Failed mat1 with q.W = %f", q.W)
@@ -145,7 +145,7 @@ func TestMatrixToQuaterion(t *testing.T) {
 		0, 0, -1, 0,
 		0, 0, 0, 0,
 	})
-	q = MatrixToQuaterion(accumulatortMat2)
+	q = matrixToQuaterion(accumulatortMat2)
 	switch {
 	case q.W != 0:
 		t.Errorf("Failed mat2 with qw = %f", q.W)
@@ -163,7 +163,7 @@ func TestMatrixToQuaterion(t *testing.T) {
 		0, 0, -2, 0,
 		0, 0, 0, 1,
 	})
-	q = MatrixToQuaterion(accumulatortMat3)
+	q = matrixToQuaterion(accumulatortMat3)
 	switch {
 	case q.W != 0:
 		t.Errorf("Failed mat3 with q.W = %f", q.W)
@@ -181,7 +181,7 @@ func TestMatrixToQuaterion(t *testing.T) {
 		0, 0, 0, 0,
 		0, 0, 0, 1,
 	})
-	q = MatrixToQuaterion(accumulatortMat4)
+	q = matrixToQuaterion(accumulatortMat4)
 	switch {
 	case q.W != 0:
 		t.Errorf("Failed mat4 with q.W = %f", q.W)

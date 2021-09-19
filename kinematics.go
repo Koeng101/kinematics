@@ -152,7 +152,7 @@ func ForwardKinematics(thetas []float64, dhParameters DhParameters) Pose {
 	output.Pos.X = accumulatortMat.At(0, 3)
 	output.Pos.Y = accumulatortMat.At(1, 3)
 	output.Pos.Z = accumulatortMat.At(2, 3)
-	output.Rot = MatrixToQuaterion(accumulatortMat)
+	output.Rot = matrixToQuaterion(accumulatortMat)
 	return output
 }
 
@@ -227,10 +227,10 @@ func InverseKinematics(desiredEndEffector Pose, dhParameters DhParameters,
 	return result.Location.X, nil
 }
 
-// MatrixToQuaterion converts a rotation matrix to a quaterion. This code has
+// matrixToQuaterion converts a rotation matrix to a quaterion. This code has
 // been tested in all cases vs the python implementation with scipy rotation
 // and works properly.
-func MatrixToQuaterion(accumulatortMat *mat.Dense) Quaternion {
+func matrixToQuaterion(accumulatortMat *mat.Dense) Quaternion {
 	// http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/
 	var qw float64
 	var qx float64
