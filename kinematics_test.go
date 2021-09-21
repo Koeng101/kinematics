@@ -11,20 +11,20 @@ func TestForwardKinematics(t *testing.T) {
 	testThetas := JointAngles{10, 1, 1, 0, 0, 0}
 	f := ForwardKinematics(testThetas, AR3DhParameters)
 	switch {
-	case f.Pos.X != -101.74590611879692:
-		t.Errorf("Forward kinematics failed on f.Pos.X = %f", f.Pos.X)
-	case f.Pos.Y != -65.96805988175777:
-		t.Errorf("Forward kinematics failed on f.Pos.Y = %f", f.Pos.Y)
-	case f.Pos.Z != -322.27756822304093:
-		t.Errorf("Forward kinematics failed on f.Pos.Z = %f", f.Pos.Z)
-	case f.Rot.X != 0.06040824945687102:
-		t.Errorf("Forward kinematics failed on f.Rot.X = %f", f.Rot.X)
-	case f.Rot.Y != -0.20421099379003957:
-		t.Errorf("Forward kinematics failed on f.Rot.Y = %f", f.Rot.Y)
-	case f.Rot.Z != 0.2771553334491873:
-		t.Errorf("Forward kinematics failed on f.Rot.Z = %f", f.Rot.Z)
-	case f.Rot.W != 0.9369277637862541:
-		t.Errorf("Forward kinematics failed on f.Rot.W = %f", f.Rot.W)
+	case f.Position.X != -101.74590611879692:
+		t.Errorf("Forward kinematics failed on f.Position.X = %f", f.Position.X)
+	case f.Position.Y != -65.96805988175777:
+		t.Errorf("Forward kinematics failed on f.Position.Y = %f", f.Position.Y)
+	case f.Position.Z != -322.27756822304093:
+		t.Errorf("Forward kinematics failed on f.Position.Z = %f", f.Position.Z)
+	case f.Rotation.X != 0.06040824945687102:
+		t.Errorf("Forward kinematics failed on f.Rotation.X = %f", f.Rotation.X)
+	case f.Rotation.Y != -0.20421099379003957:
+		t.Errorf("Forward kinematics failed on f.Rotation.Y = %f", f.Rotation.Y)
+	case f.Rotation.Z != 0.2771553334491873:
+		t.Errorf("Forward kinematics failed on f.Rotation.Z = %f", f.Rotation.Z)
+	case f.Rotation.W != 0.9369277637862541:
+		t.Errorf("Forward kinematics failed on f.Rotation.W = %f", f.Rotation.W)
 	}
 }
 

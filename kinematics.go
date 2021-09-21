@@ -65,8 +65,8 @@ type Position struct {
 // Pose represents a position and rotation, where Position is the translational
 // component, and Rot is the quaternion representing the rotation.
 type Pose struct {
-	Pos Position
-	Rot Quaternion
+	Position Position
+	Rotation Quaternion
 }
 
 // ForwardKinematics calculates the end effector Pose coordinates given
@@ -125,10 +125,10 @@ func ForwardKinematics(thetas JointAngles, dhParameters DhParameters) Pose {
 	// Now that we have the final accumulatorMatrix, lets figure out the
 	// output Pose.
 	var output Pose
-	output.Pos.X = accumulatortMat.At(0, 3)
-	output.Pos.Y = accumulatortMat.At(1, 3)
-	output.Pos.Z = accumulatortMat.At(2, 3)
-	output.Rot = matrixToQuaterion(accumulatortMat)
+	output.Position.X = accumulatortMat.At(0, 3)
+	output.Position.Y = accumulatortMat.At(1, 3)
+	output.Position.Z = accumulatortMat.At(2, 3)
+	output.Rotation = matrixToQuaterion(accumulatortMat)
 	return output
 }
 
@@ -148,16 +148,16 @@ func InverseKinematics(desiredEndEffector Pose, dhParameters DhParameters,
 		currentEndEffector := ForwardKinematics(jointAnglesTest, dhParameters)
 
 		// Get XYZ offsets
-		xOffset := desiredEndEffector.Pos.X - currentEndEffector.Pos.X
-		yOffset := desiredEndEffector.Pos.Y - currentEndEffector.Pos.Y
-		zOffset := desiredEndEffector.Pos.Z - currentEndEffector.Pos.Z
+		xOffset := desiredEndEffector.Position.X - currentEndEffector.Position.X
+		yOffset := desiredEndEffector.Position.Y - currentEndEffector.Position.Y
+		zOffset := desiredEndEffector.Position.Z - currentEndEffector.Position.Z
 
 		// Get rotational offsets. Essentially, do this in Golang (from python):
 		// np.arccos(np.clip(2*(np.dot(target_quat, source_quat)**2) - 1, -1, 1))
-		dotOffset := (desiredEndEffector.Rot.W * currentEndEffector.Rot.W) +
-			(desiredEndEffector.Rot.X * currentEndEffector.Rot.X) +
-			(desiredEndEffector.Rot.Y * currentEndEffector.Rot.Y) +
-			(desiredEndEffector.Rot.Z * currentEndEffector.Rot.Z)
+		dotOffset := (desiredEndEffector.Rotation.W * currentEndEffector.Rotation.W) +
+			(desiredEndEffector.Rotation.X * currentEndEffector.Rotation.X) +
+			(desiredEndEffector.Rotation.Y * currentEndEffector.Rotation.Y) +
+			(desiredEndEffector.Rotation.Z * currentEndEffector.Rotation.Z)
 		dotOffset = (2*(dotOffset*dotOffset) - 1)
 		if dotOffset > 1 {
 			dotOffset = 1
