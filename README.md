@@ -1,3 +1,5 @@
+# Moved to https://github.com/trilobio/kinematics
+
 # Kinematics
 
 [![Build Status](https://github.com/koeng101/kinematics/workflows/run%20tests/badge.svg)](https://github.com/koeng101/kinematics/actions?query=workflow%3A%22run+tests%22)
